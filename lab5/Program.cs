@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace MuseumApp
 {
     internal class Program
@@ -18,6 +19,7 @@ namespace MuseumApp
                 Console.WriteLine($"Ошибка загрузки: {ex.Message}");
                 return;
             }
+
             while (true)
             {
                 Console.WriteLine("\nМЕНЮ");
@@ -27,8 +29,8 @@ namespace MuseumApp
                 Console.WriteLine("4. Выполнить 4 LINQ-запроса");
                 Console.WriteLine("5. Сохранить в Excel");
                 Console.WriteLine("0. Выход");
-                Console.Write("Выбор: ");
-                string choice = Console.ReadLine();
+                string choice = Checked.ReadString("Выбор: ");
+
                 switch (choice)
                 {
                     case "1": db.PrintAll(); break;
@@ -37,82 +39,64 @@ namespace MuseumApp
                     case "4": RunQueries(db); break;
                     case "5": db.SaveData(); break;
                     case "0": return;
-                    default: Console.WriteLine("Неверный ввод"); break;
+                    default: Console.WriteLine("Неверный ввод."); break;
                 }
             }
         }
-        static int ReadInt(string prompt)
-        {
-            while (true)
-            {
-                Console.Write(prompt);
-                if (int.TryParse(Console.ReadLine(), out int res)) return res;
-                Console.WriteLine("Ошибка: нужно ввести целое число");
-            }
-        }
+
         static void AddUI(DatabaseManager db)
         {
             Console.WriteLine("\nЧТО ДОБАВИТЬ?");
-            Console.WriteLine("1.Экспонат");
-            Console.WriteLine("2.Посетителя");
-            Console.WriteLine("3.Билет");
-            Console.Write("Выбор: ");
-            string choice = Console.ReadLine();
+            Console.WriteLine("1. Экспонат");
+            Console.WriteLine("2. Посетителя");
+            Console.WriteLine("3. Билет");
+            string choice = Checked.ReadString("Выбор: ");
+
             switch (choice)
             {
                 case "1":
                     Console.WriteLine("\nДОБАВЛЕНИЕ ЭКСПОНАТА");
-                    int id = ReadInt("ID: ");
-                    Console.Write("Название: "); string name = Console.ReadLine();
-                    Console.Write("Эпоха: "); string era = Console.ReadLine();
+                    int id = Checked.ReadPositiveInt("ID: ");
+                    string name = Checked.ReadString("Название: ");
+                    string era = Checked.ReadString("Эпоха: ");
                     db.AddExhibit(new Exhibit(id, name, era));
                     break;
+
                 case "2":
                     Console.WriteLine("\nДОБАВЛЕНИЕ ПОСЕТИТЕЛЯ");
-                    int vId = ReadInt("ID: ");
-                    Console.Write("Имя: "); string vName = Console.ReadLine();
-                    int age = ReadInt("Возраст: ");
-                    Console.Write("Город: "); string city = Console.ReadLine();
+                    int vId = Checked.ReadPositiveInt("ID: ");
+                    string vName = Checked.ReadString("Имя: ");
+                    int age = Checked.ReadPositiveInt("Возраст: ");
+                    string city = Checked.ReadString("Город: ");
                     db.AddVisitor(new Visitor(vId, vName, age, city));
                     break;
+
                 case "3":
                     Console.WriteLine("\nДОБАВЛЕНИЕ БИЛЕТА");
-                    int tId = ReadInt("ID билета: ");
-                    int exId = ReadInt("ID экспоната: ");
-                    int visId = ReadInt("ID посетителя: ");
-
-                    DateTime date;
-                    while (true)
-                    {
-                        Console.Write("Дата (дд.мм.гггг): ");
-                        if (DateTime.TryParse(Console.ReadLine(), out date)) break;
-                        Console.WriteLine("Ошибка: введите дату в формате дд.мм.гггг.");
-                    }
-                    decimal price;
-                    while (true)
-                    {
-                        Console.Write("Стоимость: ");
-                        if (decimal.TryParse(Console.ReadLine(), out price) && price >= 0) break;
-                        Console.WriteLine("Ошибка: введите корректную сумму");
-                    }
-
+                    int tId = Checked.ReadPositiveInt("ID билета: ");
+                    int exId = Checked.ReadPositiveInt("ID экспоната: ");
+                    int visId = Checked.ReadPositiveInt("ID посетителя: ");
+                    DateTime date = Checked.ReadDate("Дата (дд.мм.гггг): ");
+                    decimal price = Checked.ReadPositiveDecimal("Стоимость: ");
                     db.AddTicket(new Ticket(tId, exId, visId, date, price));
                     break;
+
                 default:
-                    Console.WriteLine("Неверный ввод");
+                    Console.WriteLine("Неверный ввод.");
                     break;
             }
         }
+
         static void DeleteUI(DatabaseManager db)
         {
             Console.WriteLine("\nУДАЛЕНИЕ ЭКСПОНАТА");
-            int id = ReadInt("Введите ID для удаления: ");
+            int id = Checked.ReadPositiveInt("Введите ID для удаления: ");
             db.DeleteExhibit(id);
         }
+
         static void RunQueries(DatabaseManager db)
         {
-            Console.Write("\nВведите город для поиска посетителей: ");
-            string city = Console.ReadLine();
+            string city = Checked.ReadString("\nВведите город для поиска посетителей (например, Obrienberg): ");
             int count = db.Query1_OneTable(city);
             Console.WriteLine($"\nЗАПРОС 1 (одно значение)");
             Console.WriteLine($"Количество посетителей из города {city}: {count}");
@@ -120,8 +104,8 @@ namespace MuseumApp
             Console.WriteLine("\nЗАПРОС 2 (перечень, 2 таблицы)");
             Console.WriteLine("Экспонаты и цены билетов (первые 10):");
             foreach (var s in db.Query2_TwoTables()) Console.WriteLine(s);
-            Console.Write("\nВведите эпоху для подсчета выручки и поиска: ");
-            string era = Console.ReadLine();
+
+            string era = Checked.ReadString("\nВведите эпоху для подсчета выручки и поиска (например, Ренессанс): ");
 
             Console.WriteLine($"\nЗАПРОС 3 (одно значение, 3 таблицы)");
             Console.WriteLine($"Выручка ({era}, июнь 2023): {db.Query3_ThreeTables_Sum(era):F2} руб.");
@@ -131,6 +115,4 @@ namespace MuseumApp
             foreach (var s in db.Query4_ThreeTables_List(era)) Console.WriteLine(s);
         }
     }
-};
-        
-    
+}
